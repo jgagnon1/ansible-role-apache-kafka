@@ -16,5 +16,4 @@
   shell: 'service kafka stop && service kafka start'
   sudo: yes  
   when: (ansible_distribution == 'CentOS' and ansible_distribution_major_version > '6')
-  
 
