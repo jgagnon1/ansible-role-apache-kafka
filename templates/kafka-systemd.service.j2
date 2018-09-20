@@ -8,7 +8,7 @@ After=network.target remote-fs.target
 Type=simple
 User=kafka
 Group=kafka
-Environment=LOG_DIR={{kafka_log_directory}}
+Environment='LOG_DIR={{kafka_log_directory}}'
 {% for name, value in (kafka_env_variables.items() | list) %}
 Environment='{{name}}={{value}}'
 {% endfor %}

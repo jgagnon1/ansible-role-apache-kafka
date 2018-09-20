@@ -1,0 +1,50 @@
+---
+- name: Make log directory
+  become: yes
+  file:
+    path: "{{kafka_log_directory}}"
+    owner: "{{kafka_user}}"
+    recurse: yes
+    state: directory
+
+- name: Install kafka mirror config (consumer)
+  become: yes
+  with_items: "{{ kafka_mirrors }}"
+  template: >
+    src=kafka-mirror-consumer.properties.j2
+    dest={{kafka_install_dir}}/config/{%if 'file_basename' in item%}{{item.file_basename}}{%else%}{{kafka_default_file_basename_prefix}}mirror-{{ item.mirror_id }}-consumer{%endif%}.properties
+    owner={{kafka_user}}
+
+- name: Install kafka mirror config (producer)
+  become: yes
+  with_items: "{{ kafka_mirrors }}"
+  template: >
+    src=kafka-mirror-producer.properties.j2
+    dest={{kafka_install_dir}}/config/{%if 'file_basename' in item%}{{item.file_basename}}{%else%}{{kafka_default_file_basename_prefix}}mirror-{{ item.mirror_id }}-producer{%endif%}.properties
+    owner={{kafka_user}}
+
+- name: Install kafka mirror log4j properties
+  become: yes
+  template: >
+    src=mirror-log4j.properties.j2
+    dest={{kafka_install_dir}}/config/{{kafka_default_file_basename_prefix}}mirror-log4j.properties
+    owner={{kafka_user}}
+
+- name: Install kafka systemd service
+  become: yes
+  with_items: "{{ kafka_mirrors }}"
+  template: >
+    src=kafka-mirror-systemd.service.j2
+    dest=/etc/systemd/system/{%if 'file_basename' in item%}{{item.file_basename}}{%else%}{{kafka_default_file_basename_prefix}}mirror-{{ item.mirror_id }}{%endif%}.service
+    owner=root
+    mode=0755
+  when: (ansible_distribution == 'CentOS' and ansible_distribution_major_version > '6')
+
+- name: Systemd mirror services running and enabled
+  with_items: "{{ kafka_mirrors }}"
+  systemd:
+    state: started
+    enabled: yes
+    daemon_reload: yes
+    name: "kafka-mirror-{{ item.mirror_id }}"
+

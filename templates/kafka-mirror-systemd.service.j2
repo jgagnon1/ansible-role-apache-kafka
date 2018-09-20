@@ -1,0 +1,24 @@
+[Unit]
+Description=Apache Kafka mirrormaker
+Documentation=http://kafka.apache.org/documentation.html
+Requires=network.target remote-fs.target 
+After=network.target remote-fs.target
+
+[Service]
+Restart=always
+Type=simple
+User=kafka
+Group=kafka
+Environment=LOG_DIR={{kafka_log_directory}}
+Environment='KAFKA_LOG4J_OPTS=-Dlog4j.configuration={{kafka_install_dir}}/config/{{kafka_default_file_basename_prefix}}mirror-log4j.properties'
+{% for name, value in (kafka_env_variables|combine(item.kafka_env_variables)).items()|list %}
+Environment='{{name}}={{value}}'
+{% endfor %}
+ExecStart={{kafka_install_dir}}/bin/kafka-mirror-maker.sh \
+  --consumer.config {{kafka_install_dir}}/config/{%if 'file_basename' in item%}{{item.file_basename}}{%else%}{{kafka_default_file_basename_prefix}}mirror-{{item.mirror_id}}-consumer{%endif%}.properties \
+  --producer.config {{kafka_install_dir}}/config/{%if 'file_basename' in item%}{{item.file_basename}}{%else%}{{kafka_default_file_basename_prefix}}mirror-{{item.mirror_id}}-producer{%endif%}.properties \
+  --num.stream {{ item.num_streams|default(2) }} \
+  --whitelist=\"{{ item.topic_whitelist }}\"
+
+[Install]
+WantedBy=multi-user.target

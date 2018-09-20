@@ -77,3 +77,6 @@ kafka_more_config: {}
 # quote "'" characters.
 kafka_env_variables:
   KAFKA_HEAP_OPTS: "-Xmx1G -Xms1G"
+
+# Set to true when no broker is wanted (IE: only mirror)
+kafka_disable_brokers: false

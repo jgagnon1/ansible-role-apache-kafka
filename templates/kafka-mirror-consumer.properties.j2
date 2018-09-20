@@ -1,0 +1,6 @@
+{{ ansible_managed | comment }}
+
+{% for config_key, config_value in (item.consumer_config_content.items() | list) %}
+{{config_key}}={{config_value}}
+{% endfor %}
+
